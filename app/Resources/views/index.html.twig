@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+ {% block body %}
+ <div>
+            {% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
+                {{ 'layout.logged_in_as'|trans({'%username%': app.user.username}, 'FOSUserBundle') }} |
+                <a href="{{ path('fos_user_security_logout') }}">
+                    {{ 'layout.logout'|trans({}, 'FOSUserBundle') }}
+                </a>
+            {% else %}
+                <a href="{{ path('fos_user_security_login') }}">{{ 'layout.login'|trans({}, 'FOSUserBundle') }}</a>
+            {% endif %}
+        </div>
+<div class="fos_user_user_show">
+    <table class="table" style="width:50%">
+  
+  <tbody>
+    <tr>
+      
+      <td>Age :</td>
+      <td>{{app.user.age}}</td>
+      
+    </tr>
+    <tr>
+      
+      <td>Race :</td>
+      <td>{{app.user.race}}</td>
+      
+    </tr>
+    <tr>
+      <td>famille : </td>
+      <td>{{app.user.famille}}</td>
+     
+    </tr>
+    <tr>
+      <td>norriture :</td>
+      <td>{{app.user.norriture}}</td>
+     
+    </tr>
+  </tbody>
+</table>
+    
+   
+    <a href="/edit" class="btn"  > modifier</a>
+</div>  
+
+<div>
+    
+    Liste d'amis :
+    {% for friend in friends %}
+    <table class="table" style="width:50%;">
+  
+  <tbody>
+    <tr>
+      
+      <td>{{friend.username}}</td>
+      <td><a class="btn btn-danger" href="/delete/{{friend.username}}">supprimer</a></td>
+      
+    </tr>
+    </tbody>
+    </table>
+    {% endfor %}
+   
+</div>
+<div>
+    <p>ajouter un ami en ajoutant son username :</p>
+    {{ form_start(form) }}
+ {{ form_widget(form) }}
+ {{ form_end(form) }}
+
+</div>
+
+{% endblock %}
