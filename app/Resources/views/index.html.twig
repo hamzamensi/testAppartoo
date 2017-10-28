@@ -1,7 +1,8 @@
 {% extends 'base.html.twig' %}
 
  {% block body %}
- <div>
+ <div ng-controller="myCtrl">
+ <div  >
             {% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
                 {{ 'layout.logged_in_as'|trans({'%username%': app.user.username}, 'FOSUserBundle') }} |
                 <a href="{{ path('fos_user_security_logout') }}">
@@ -11,30 +12,30 @@
                 <a href="{{ path('fos_user_security_login') }}">{{ 'layout.login'|trans({}, 'FOSUserBundle') }}</a>
             {% endif %}
         </div>
-<div class="fos_user_user_show">
+<div >
     <table class="table" style="width:50%">
   
   <tbody>
     <tr>
       
       <td>Age :</td>
-      <td>{{app.user.age}}</td>
+      <td>{{ "{{user.age}}" }}</td>
       
     </tr>
     <tr>
       
       <td>Race :</td>
-      <td>{{app.user.race}}</td>
+      <td>{{ "{{user.race}}" }}</td>
       
     </tr>
     <tr>
       <td>famille : </td>
-      <td>{{app.user.famille}}</td>
+      <td>{{ "{{user.famille}}" }}</td>
      
     </tr>
     <tr>
       <td>norriture :</td>
-      <td>{{app.user.norriture}}</td>
+      <td>{{ "{{user.norriture}}" }}</td>
      
     </tr>
   </tbody>
@@ -43,31 +44,163 @@
    
     <a href="/edit" class="btn"  > modifier</a>
 </div>  
-
-<div>
+</div>
+<div ng-controller="myCtrl2 as control2">
     
     Liste d'amis :
-    {% for friend in friends %}
+    
     <table class="table" style="width:50%;">
   
   <tbody>
-    <tr>
+    <tr ng-repeat="friend in friends">
       
-      <td>{{friend.username}}</td>
-      <td><a class="btn btn-danger" href="/delete/{{friend.username}}">supprimer</a></td>
+      <td>{{ "{{friend.username}}" }}</td>
+      <td><a class="btn btn-danger" ng-click="delete(friend.username)" href="">supprimer</a></td>
       
     </tr>
     </tbody>
     </table>
-    {% endfor %}
+   
+   
+
+    <p>ajouter un ami en ajoutant son username :</p>
+    <!-- {{ form_start(form) }}
+ {{ form_widget(form) }}
+ {{ form_end(form) }}-->
+      <input type="text" ng-model="friend" >
+
+
+
+    <table class="table" style="width:50%;">
+  
+  <tbody>
+  
+    <tr ng-repeat="user in users |filter:friend">
+      
+      <td>{{ "{{user.username}}" }}</td>
+      <td><a ng-if="!user.is_friend" class="btn btn-success" href="" ng-click="ajouter(user.username)">Ajouter</a>
+      <a ng-if="user.is_friend" class="btn btn-success disabled" href="">Amis</a>
+      </td>
+      
+    </tr>
+    </tbody>
+    </table>
    
 </div>
-<div>
-    <p>ajouter un ami en ajoutant son username :</p>
-    {{ form_start(form) }}
- {{ form_widget(form) }}
- {{ form_end(form) }}
 
-</div>
+{% endblock %}
+         {% block javascripts %}
+       <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.js">  </script>   
+       <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"> </script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-resource.js"> </script>
+         <script>
+      var app = angular.module('myApp', []);
+      </script>
+       <script type="text/javascript">
+          app.controller('myCtrl',['$scope','$http', function($scope, $http) {
+              $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/getuser/"
+              }).then(function mySuccess(response) {
+                  $scope.user = response.data;
+                  console.log(response.data);
+              }, function myError(response) {
+                  console.log(response);
+              });
+          }]);
+          app.controller('myCtrl2',['$scope','$http', function($scope, $http) {
+              $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/getmyfriends/"
+              }).then(function mySuccess(response) {
+                  $scope.friends = response.data;
+                  console.log(response.data);
+              }, function myError(response) {
+                  console.log(response);
+              });
+              
+              $scope.delete = function(username){
+                console.log(username);
+                $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/delete/"+username
+              }).then(function mySuccess(response) {
+                  $scope.friends = response.data;
+                  console.log(response.data);
+                   $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/allUsers/"
+              }).then(function mySuccess(response) {
+                  $scope.users = response.data;
+                  console.log(response.data);
+              }, function myError(response) {
+                  console.log(response);
+              });
+                  
+              }, function myError(response) {
+                  console.log(response);
+              });
+              }
+              $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/allUsers/"
+              }).then(function mySuccess(response) {
+                  $scope.users = response.data;
+                  console.log(response.data);
+              }, function myError(response) {
+                  console.log(response);
+              });
+              $scope.ajouter = function(username){
+                $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/ajouter/"+username
+              }).then(function mySuccess(response) {
+                 $scope.friends = response.data;  
+               console.log(response.data);
+                $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/allUsers/"
+              }).then(function mySuccess(response) {
+                  $scope.users = response.data;
+                  console.log(response.data);
+              }, function myError(response) {
+                  console.log(response);
+              });
+              }, function myError(response) {
+                  console.log(response);
+              });
+              }
 
+          }]);
+          app.controller('myCtrl3',['$scope','$http', function($scope, $http) {
+              $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/allUsers/"
+              }).then(function mySuccess(response) {
+                  $scope.users = response.data;
+                  console.log(response.data);
+              }, function myError(response) {
+                  console.log(response);
+              });
+              
+              $scope.ajouter = function(username){
+                $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/ajouter/"+username
+              }).then(function mySuccess(response) {
+                 $http({
+                  method : "GET",
+                  url : "http://127.0.0.1:8000/allUsers/"
+              }).then(function mySuccess(response) {
+                  $scope.users = response.data;
+                  console.log(response.data);
+              }, function myError(response) {
+                  console.log(response);
+              });
+              }, function myError(response) {
+                  console.log(response);
+              });
+              }
+          }]);
+</script>
 {% endblock %}

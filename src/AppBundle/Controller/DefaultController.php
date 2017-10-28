@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use AppBundle\Entity\Insecte;
 use Symfony\Component\Form\Extension\Core\Type\TextType ;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType ;
@@ -31,7 +32,7 @@ class DefaultController extends Controller
             ->getForm();
         $form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()){
-            $username = $form['email']->getData();
+            $username = $form['username']->getData();
             $friend =new Insecte ;
             $friend =  $this->getDoctrine()->getManager()->getRepository('AppBundle:Insecte')->findOneByUsername($username);
 
@@ -123,9 +124,143 @@ $form = $this->createFormBuilder($Insect)
             $em->persist($Insect);
 
             $em->flush();
-            return $this->redirectToRoute('homepage'); 
+            //return $this->redirectToRoute('homepage'); 
+            $friends = $Insect->getMyFriends();
+    $amis = array();
+    foreach($friends as $friend) {
+        $amis[] = array("username" => $friend->getUsername()) ;
+    }
+    $response = new Response(json_encode($amis));
+    $response->headers->set('Content-Type', 'application/json');
+
+    return $response;
+            
          }
          }
+          /**  
+     * @Route("/ajouter/{username}", name="addfriend")
+     */
 
+         public function AddFriendAction(Request $request,$username){
+             $Insect = new Insecte ;
+        if( $this->container->get( 'security.authorization_checker' )->isGranted( 'IS_AUTHENTICATED_FULLY' ) )
+{
+    $Insect = $this->container->get('security.token_storage')->getToken()->getUser();
+    
+}
+             $friend =new Insecte ;
+            $friend =  $this->getDoctrine()->getManager()->getRepository('AppBundle:Insecte')->findOneByUsername($username);
 
+            if($friend){
+            $Insect->addMyFriend($friend);
+            $em = $this->getDoctrine()->getManager();
+            
+            $em->persist($friend);
+            $em->persist($Insect);
+
+            $em->flush();
+            $friends = $Insect->getMyFriends();
+    $amis = array();
+    foreach($friends as $friend) {
+        $amis[] = array("username" => $friend->getUsername()) ;
+    }
+    $response = new Response(json_encode($amis));
+    $response->headers->set('Content-Type', 'application/json');
+
+    return $response;
+            //return $this->redirectToRoute('homepage'); 
+
+            }
+         }
+
+         /**  
+     * @Route("/getuser/", name="getuser")
+     */
+
+         public function getUserAction(Request $request){
+             $Insect = new Insecte ;
+        if( $this->container->get( 'security.authorization_checker' )->isGranted( 'IS_AUTHENTICATED_FULLY' ) )
+{
+    $Insect = $this->container->get('security.token_storage')->getToken()->getUser();
+    $i =  $this->getDoctrine()->getManager()->getRepository('AppBundle:Insecte')->findOneByUsername($Insect->getUsername());
+    $user = array (
+        "username" => $i->getUsername(),
+        "age" => $i->getAge(),
+        "famille" => $i->getFamille(),
+        "norriture" => $i->getNorriture(),
+        "race" => $i->getRace()
+    );
+    $response = new Response(json_encode($user));
+    $response->headers->set('Content-Type', 'application/json');
+
+    return $response;
+    
+}else {
+    return null ; 
+}
+             ; 
+         }
+         
+
+         /**  
+     * @Route("/getmyfriends/", name="getfriends")
+     */
+
+         public function getFriendsAction(Request $request){
+             $Insect = new Insecte ;
+        if( $this->container->get( 'security.authorization_checker' )->isGranted( 'IS_AUTHENTICATED_FULLY' ) )
+{
+    $Insect = $this->container->get('security.token_storage')->getToken()->getUser();
+   
+    $friends = $Insect->getMyFriends();
+    $amis = array();
+    foreach($friends as $friend) {
+        $amis[] = array("username" => $friend->getUsername()) ;
+    }
+    $response = new Response(json_encode($amis));
+    $response->headers->set('Content-Type', 'application/json');
+
+    return $response;
+    
+}else {
+    return null ; 
+}
+             ; 
+         }
+            /**  
+     * @Route("/allUsers/", name="getUsers")
+     */
+
+         public function getUsersAction(Request $request){
+
+                  $Insect = new Insecte ;
+        if( $this->container->get( 'security.authorization_checker' )->isGranted( 'IS_AUTHENTICATED_FULLY' ) )
+{
+    $Insect = $this->container->get('security.token_storage')->getToken()->getUser();
+   
+    $friends = $Insect->getMyFriends();
+    $amis = array();
+    foreach($friends as $friend) {
+        $amis[] = array("username" => $friend->getUsername()) ;
+    }
+            $em = $this->getDoctrine()->getManager()->getRepository('AppBundle:Insecte')->findAll();
+            $users = array();
+    foreach($em as $user) {
+        if($user->getUsername() != $Insect->getUsername()){
+        $is_friend = false ;
+        foreach($amis as $ami){
+            if ($user->getUsername() == $ami["username"]){
+                $is_friend=true ;
+                break;
+            }
+        }
+        $users[] = array("username" => $user->getUsername(),"is_friend" => $is_friend ) ;
+    }
+    }
+    $response = new Response(json_encode($users));
+    $response->headers->set('Content-Type', 'application/json');
+
+    return $response;
+         }
+         }
 }
